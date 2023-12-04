@@ -1,6 +1,27 @@
-<script>
+<script lang="ts">
 	import { signIn, signOut } from '@auth/sveltekit/client';
 	import { page } from '$app/stores';
+
+	let currentlyPlaying = $state<any>({});
+
+	$effect(() => {
+		setInterval(() => {
+			const accessToken = $page.data.session?.accessToken;
+			if (accessToken !== undefined) {
+				fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+					headers: {
+						Authorization: `Bearer  ${accessToken}`
+					}
+				})
+					.then((res) => {
+						return res.json();
+					})
+					.then((res) => {
+						currentlyPlaying = res;
+					});
+			}
+		}, 2500);
+	});
 </script>
 
 {#if $page.data.session?.user}
@@ -25,7 +46,14 @@
 				</form>
 			</div>
 		</div>
-		<footer class="music-controller-container"></footer>
+		<footer class="music-controller-container">
+			{currentlyPlaying?.item?.name}
+			<progress
+				class="music-progress"
+				max={currentlyPlaying?.item?.duration_ms ?? 0}
+				value={currentlyPlaying?.progress_ms ?? 0}
+			/>
+		</footer>
 	</main>
 {:else}
 	<div class="login-container">
@@ -123,5 +151,9 @@
 	.chat-input {
 		width: 100%;
 		height: 100%;
+	}
+
+	.music-progress {
+		width: 100%;
 	}
 </style>
