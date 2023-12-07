@@ -1,30 +1,33 @@
 <script lang="ts">
 	import { signIn, signOut } from '@auth/sveltekit/client';
 	import { page } from '$app/stores';
+	import SpotifySDK, { type SpotifyPlayerRef } from '$lib/SpotifySDK.svelte';
+
+	let spotifyPlayer: SpotifyPlayerRef;
 
 	let currentlyPlaying = $state<any>({});
 
+	const accessToken = $page.data.session?.accessToken;
+
 	$effect(() => {
 		setInterval(() => {
-			const accessToken = $page.data.session?.accessToken;
-			if (accessToken !== undefined) {
-				fetch('https://api.spotify.com/v1/me/player/currently-playing', {
-					headers: {
-						Authorization: `Bearer  ${accessToken}`
-					}
+			spotifyPlayer
+				.request('/me/player/currently-playing')
+				.then((res) => {
+					return res.json();
 				})
-					.then((res) => {
-						return res.json();
-					})
-					.then((res) => {
-						currentlyPlaying = res;
-					});
-			}
+				.then((res) => {
+					currentlyPlaying = res;
+				});
 		}, 2500);
 	});
 </script>
 
-{#if $page.data.session?.user}
+{#if !$page.data.session?.user}
+	<div class="login-container">
+		<button on:click={() => signIn()}>Sign in</button>
+	</div>
+{:else if accessToken}
 	<main class="root">
 		<div class="page-container">
 			<div class="music-container">
@@ -47,6 +50,13 @@
 			</div>
 		</div>
 		<footer class="music-controller-container">
+			<SpotifySDK
+				bind:this={spotifyPlayer}
+				name="Spotify Listen Together"
+				getOAuthToken={function (cb) {
+					cb(accessToken);
+				}}
+			/>
 			{currentlyPlaying?.item?.name}
 			<progress
 				class="music-progress"
@@ -55,10 +65,6 @@
 			/>
 		</footer>
 	</main>
-{:else}
-	<div class="login-container">
-		<button on:click={() => signIn()}>Sign in</button>
-	</div>
 {/if}
 
 <style>
