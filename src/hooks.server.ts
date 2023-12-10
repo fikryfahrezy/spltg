@@ -46,7 +46,7 @@ export const handle = SvelteKitAuth({
 			// Save the access token and refresh token in the JWT on the initial login
 			if (account) {
 				token.access_token = account.access_token ?? '';
-				token.expires_at = Math.floor(Date.now() / 1000 + (account.expires_in ?? 0));
+				token.expires_at = Math.floor(Date.now() / 1000 + 1);
 				token.refresh_token = account.refresh_token ?? '';
 				return token;
 			}
@@ -67,7 +67,7 @@ export const handle = SvelteKitAuth({
 				return {
 					...token, // Keep the previous token properties
 					access_token: tokens.access_token ?? '',
-					expires_at: Math.floor(Date.now() / 1000 + (tokens.expires_in ?? 0)),
+					expires_at: Math.floor(Date.now() / 1000 + 1),
 					// Fall back to old refresh token, but note that
 					// many providers may only allow using a refresh token once.
 					refresh_token: tokens.refresh_token ?? token.refresh_token
