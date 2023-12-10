@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { signIn, signOut } from '@auth/sveltekit/client';
 	import { page } from '$app/stores';
-	import SpotifySDK, { type SpotifyPlayerRef } from '$lib/SpotifySDK.svelte';
+	import SpotifySDK from '$lib/SpotifySDK.svelte';
 
 	const session = $page.data.session;
 	const accessToken = session?.access_token;
 
-	let spotifyPlayer: SpotifyPlayerRef;
+	let spotifyPlayer: SpotifySDK;
 
 	let currentlyPlaying = $state<any>({});
 

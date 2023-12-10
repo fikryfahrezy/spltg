@@ -1,6 +1,13 @@
 // Ref:
 // https://developer.spotify.com/documentation/web-playback-sdk/reference#spotifyplayer
 
+declare global {
+	interface Window {
+		onSpotifyWebPlaybackSDKReady(): void;
+		Spotify: Spotify;
+	}
+}
+
 export type WebPlaybackPlayer = { device_id: string };
 
 export type Album = {
@@ -145,12 +152,3 @@ export interface SpotifyPlayerConstructor {
 export type Spotify = {
 	Player: SpotifyPlayerConstructor;
 };
-
-declare global {
-	interface Window {
-		onSpotifyWebPlaybackSDKReady(): void;
-		Spotify: Spotify;
-	}
-}
-
-export {};

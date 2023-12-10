@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts">
 	import type {
 		SpotifyPlayer,
 		SpotifyPlayerConstructorOption,
@@ -8,12 +8,6 @@
 		WebPlaybackState
 	} from './spotifysdk.type';
 
-	export type SpotifyPlayerRef = Omit<SpotifyPlayer, 'connect'> & {
-		request(path: string, init?: RequestInit): ReturnType<typeof fetch>;
-	};
-</script>
-
-<script lang="ts">
 	const spotifyAPIURL = 'https://api.spotify.com/v1';
 
 	let { getOAuthToken, name, enableMediaSession, volume } =
