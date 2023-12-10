@@ -8,6 +8,8 @@
 		WebPlaybackState
 	} from './spotifysdk.type';
 
+	import type { CurrentlyPlayingTrack } from './spotifyapi.type';
+
 	const spotifyAPIURL = 'https://api.spotify.com/v1';
 
 	let { getOAuthToken, name, enableMediaSession, volume } =
@@ -103,6 +105,12 @@
 
 	export function disconnect() {
 		return player.disconnect();
+	}
+
+	export async function getCurrentlyPlayingTrack(): Promise<CurrentlyPlayingTrack> {
+		return request('/me/player/currently-playing').then((res) => {
+			return res.json();
+		});
 	}
 
 	export function request(path: string, init?: RequestInit) {
