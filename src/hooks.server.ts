@@ -1,5 +1,6 @@
 import type { JWT } from '@auth/core/jwt';
 import type { TokenSet } from '@auth/core/types';
+import { Buffer } from 'node:buffer';
 
 import { SvelteKitAuth } from '@auth/sveltekit';
 import Spotify from '@auth/core/providers/spotify';
@@ -24,12 +25,13 @@ async function refreshSpotifyAccessToken(token: JWT) {
 	const payload = {
 		method: 'POST',
 		headers: {
-			'Content-Type': 'application/x-www-form-urlencoded'
+			'Content-Type': 'application/x-www-form-urlencoded',
+			Authorization:
+				'Basic ' + Buffer.from(SPOTIFY_CLIENT_ID + ':' + SPOTIFY_CLIENT_SECRET).toString('base64')
 		},
 		body: new URLSearchParams({
 			grant_type: 'refresh_token',
-			refresh_token: token.refresh_token,
-			client_id: SPOTIFY_CLIENT_ID
+			refresh_token: token.refresh_token
 		})
 	};
 	const response = await fetch(url, payload);
