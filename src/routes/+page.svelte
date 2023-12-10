@@ -3,11 +3,12 @@
 	import { page } from '$app/stores';
 	import SpotifySDK, { type SpotifyPlayerRef } from '$lib/SpotifySDK.svelte';
 
+	const session = $page.data.session;
+	const accessToken = session?.access_token;
+
 	let spotifyPlayer: SpotifyPlayerRef;
 
 	let currentlyPlaying = $state<any>({});
-
-	const accessToken = $page.data.session?.accessToken;
 
 	$effect(() => {
 		setInterval(() => {
@@ -21,9 +22,15 @@
 				});
 		}, 2500);
 	});
+
+	$effect(() => {
+		if (session?.error === 'RefreshAccessTokenError') {
+			signIn(); // Force sign in to hopefully resolve error
+		}
+	});
 </script>
 
-{#if !$page.data.session?.user}
+{#if !session?.user}
 	<div class="login-container">
 		<button on:click={() => signIn()}>Sign in</button>
 	</div>
@@ -36,7 +43,7 @@
 			</div>
 			<div class="chat-room-container">
 				<div class="profile-container">
-					<p>Hi, {$page.data.session.user.name}!</p>
+					<p>Hi, {session.user.name}!</p>
 					<button on:click={() => signOut()}>Sign out</button>
 				</div>
 				<div class="chat-list-container">
