@@ -1,11 +1,10 @@
 <script lang="ts">
-	import { signIn, signOut } from '@auth/sveltekit/client';
 	import { page } from '$app/stores';
 	import type { CurrentlyPlayingTrack } from '$lib/spotifyapi.type';
 	import SpotifySDK from '$lib/SpotifySDK.svelte';
 
-	const session = $page.data.session;
-	const accessToken = session?.access_token;
+	// const session = $page.data.session;
+	// const accessToken = session?.access_token;
 	const minuteInMS = 1000;
 
 	let spotifyPlayer: SpotifySDK;
@@ -40,18 +39,14 @@
 		}, minuteInMS);
 	});
 
-	$effect(() => {
-		if (session?.error === 'RefreshAccessTokenError') {
-			signIn(); // Force sign in to hopefully resolve error
-		}
-	});
+	
 </script>
 
-{#if !session?.user}
+{#if true}
 	<div class="login-container">
-		<button on:click={() => signIn()}>Sign in</button>
+		<!-- <button on:click={() => signIn()}>Sign in</button> -->
 	</div>
-{:else if accessToken}
+{:else if false}
 	<main class="root">
 		<div class="page-container">
 			<div class="music-container">
@@ -60,8 +55,8 @@
 			</div>
 			<div class="chat-room-container">
 				<div class="profile-container">
-					<p>Hi, {session.user.name}!</p>
-					<button on:click={() => signOut()}>Sign out</button>
+					<!-- <p>Hi, {session.user.name}!</p> -->
+					<!-- <button on:click={() => signOut()}>Sign out</button> -->
 				</div>
 				<div class="chat-list-container">
 					{#each Array.from(Array(100), () => 'Lorem ipsum dolor sit amet.') as chat}
@@ -78,7 +73,7 @@
 				bind:this={spotifyPlayer}
 				name="Spotify Listen Together"
 				getOAuthToken={function (cb) {
-					cb(accessToken);
+					// cb(accessToken);
 				}}
 			/>
 			{currentlyPlayingTrack?.item?.name}
