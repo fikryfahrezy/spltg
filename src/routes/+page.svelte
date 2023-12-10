@@ -12,7 +12,7 @@
 
 	let currentlyPlayingTrack = $state<CurrentlyPlayingTrack>();
 	let progress = $state<number>(0);
-	let progressIntervalId = $state<number>();
+	let progressIntervalId = $state<NodeJS.Timeout>();
 
 	function getCurrentlyPlaying() {
 		spotifyPlayer
