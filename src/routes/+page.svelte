@@ -14,6 +14,10 @@
 	let progressIntervalId = $state<NodeJS.Timeout>();
 
 	function getCurrentlyPlaying() {
+		if (!spotifyPlayer) {
+			return;
+		}
+
 		spotifyPlayer
 			.getCurrentlyPlayingTrack()
 			.then((res) => {
@@ -27,7 +31,7 @@
 					const durationMs = currentlyPlayingTrack?.item?.duration_ms;
 					if (durationMs !== undefined && progress > durationMs) {
 						clearInterval(progressIntervalId);
-						getCurrentlyPlaying()
+						getCurrentlyPlaying();
 					}
 				}, minuteInMS);
 			});
@@ -38,13 +42,11 @@
 			getCurrentlyPlaying();
 		}, minuteInMS);
 	});
-
-	
 </script>
 
 {#if true}
 	<div class="login-container">
-		<!-- <button on:click={() => signIn()}>Sign in</button> -->
+		<a href="/auth/login">Log in with Spotify</a>
 	</div>
 {:else if false}
 	<main class="root">
