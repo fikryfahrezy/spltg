@@ -1,26 +1,43 @@
 <script lang="ts">
 	import { signIn, signOut } from '@auth/sveltekit/client';
 	import { page } from '$app/stores';
+	import type { CurrentlyPlayingTrack } from '$lib/spotifyapi.type';
 	import SpotifySDK from '$lib/SpotifySDK.svelte';
 
 	const session = $page.data.session;
 	const accessToken = session?.access_token;
+	const minuteInMS = 1000;
 
 	let spotifyPlayer: SpotifySDK;
 
-	let currentlyPlaying = $state<any>({});
+	let currentlyPlayingTrack = $state<CurrentlyPlayingTrack>();
+	let progress = $state<number>(0);
+	let progressIntervalId = $state<number>();
+
+	function getCurrentlyPlaying() {
+		spotifyPlayer
+			.getCurrentlyPlayingTrack()
+			.then((res) => {
+				currentlyPlayingTrack = res;
+				progress = res.progress_ms ?? 0;
+			})
+			.then(() => {
+				progressIntervalId = setInterval(() => {
+					progress += minuteInMS;
+
+					const durationMs = currentlyPlayingTrack?.item?.duration_ms;
+					if (durationMs !== undefined && progress > durationMs) {
+						clearInterval(progressIntervalId);
+						getCurrentlyPlaying()
+					}
+				}, minuteInMS);
+			});
+	}
 
 	$effect(() => {
-		setInterval(() => {
-			spotifyPlayer
-				.request('/me/player/currently-playing')
-				.then((res) => {
-					return res.json();
-				})
-				.then((res) => {
-					currentlyPlaying = res;
-				});
-		}, 2500);
+		setTimeout(() => {
+			getCurrentlyPlaying();
+		}, minuteInMS);
 	});
 
 	$effect(() => {
@@ -64,11 +81,11 @@
 					cb(accessToken);
 				}}
 			/>
-			{currentlyPlaying?.item?.name}
+			{currentlyPlayingTrack?.item?.name}
 			<progress
 				class="music-progress"
-				max={currentlyPlaying?.item?.duration_ms ?? 0}
-				value={currentlyPlaying?.progress_ms ?? 0}
+				max={currentlyPlayingTrack?.item?.duration_ms ?? 0}
+				value={progress}
 			/>
 		</footer>
 	</main>
