@@ -20,6 +20,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		'&' +
 		new URLSearchParams({
 			response_type: 'code',
+			show_dialog: 'true',
 			client_id: SPOTIFY_CLIENT_ID,
 			redirect_uri: `${url.origin}${SPOTIFY_AUTH_CALLBACK_PATH}`,
 			state: state
@@ -29,7 +30,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		status: 302,
 		headers: [
 			['Location', redirectURL],
-			['Set-Cookie', `${spotifyAuthStateKey}=${state}; path=/; HttpOnly`],
+			['Set-Cookie', `${spotifyAuthStateKey}=${state}; path=/; HttpOnly`]
 		]
 	});
 };
