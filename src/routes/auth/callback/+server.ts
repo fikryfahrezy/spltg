@@ -10,6 +10,21 @@ import {
 } from '$env/static/private';
 import { spotifyAuthStateKey } from '$lib/constants';
 
+const onErrorResponse = (origin: string) => {
+	return new Response(null, {
+		status: 302,
+		headers: [
+			['Location', `${origin}/error`], // TODO: implement error page
+			['Set-Cookie', `access_token=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`],
+			['Set-Cookie', `refresh_token=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`],
+			[
+				'Set-Cookie',
+				`${spotifyAuthStateKey}=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+			]
+		]
+	});
+};
+
 export const GET: RequestHandler = async ({ url, cookies }) => {
 	// requests refresh and access tokens
 	// after checking the state parameter
@@ -19,12 +34,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	const storedState = cookies.get(spotifyAuthStateKey);
 
 	if (code === null || state === null || state !== storedState) {
-		return new Response(null, {
-			status: 302,
-			headers: {
-				Location: `${url.origin}/error` // TODO: implement error page
-			}
-		});
+		return onErrorResponse(url.origin);
 	}
 
 	try {
@@ -74,11 +84,6 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 			]
 		});
 	} catch (error) {
-		return new Response(null, {
-			status: 302,
-			headers: {
-				Location: `${url.origin}/error` // TODO: implement error page
-			}
-		});
+		return onErrorResponse(url.origin);
 	}
 };
