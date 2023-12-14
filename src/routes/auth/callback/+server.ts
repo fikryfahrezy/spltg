@@ -1,14 +1,16 @@
 import { Buffer } from 'node:buffer';
 import type { RequestHandler } from './$types';
-import type { SpotifyAccessTokenResponse } from '../../../types';
+import type { SpotifyAccessTokenResponse, SpotifyCurrentProfile } from '../../../types';
 import {
 	SPOTIFY_CLIENT_SECRET,
 	SPOTIFY_CLIENT_ID,
 	SPOTIFY_TOKEN_URL,
 	SPOTIFY_USER_INFO_URL,
-	SPOTIFY_AUTH_CALLBACK_PATH
+	SPOTIFY_AUTH_CALLBACK_PATH,
+	AUTH_SECRET
 } from '$env/static/private';
-import { spotifyAuthStateKey } from '$lib/constants';
+import { spotifyAuthStateKey, sessionKey } from '$lib/constants';
+import { encode } from '$lib/jwt';
 
 const onErrorResponse = (origin: string) => {
 	return new Response(null, {
@@ -38,7 +40,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	}
 
 	try {
-		const { accessToken } = await fetch(SPOTIFY_TOKEN_URL, {
+		const { accessToken, userInfo } = await fetch(SPOTIFY_TOKEN_URL, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/x-www-form-urlencoded',
@@ -65,16 +67,29 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 				]);
 			})
 			.then(([accessToken, res]) => {
-				return Promise.all([accessToken, res.json()]);
+				return Promise.all([accessToken, res.json() as Promise<SpotifyCurrentProfile>]);
 			})
 			.then(([accessToken, userInfo]) => {
 				return { accessToken, userInfo };
 			});
 
+		const sessionToken = await encode({
+			salt: sessionKey,
+			secret: AUTH_SECRET,
+			maxAge: accessToken.expires_in,
+			token: {
+				name: userInfo?.display_name ?? null,
+				email: userInfo?.email ?? null,
+				picture: userInfo?.images?.[0]?.url ?? null,
+				exp: accessToken.expires_in
+			}
+		});
+
 		return new Response(null, {
 			status: 302,
 			headers: [
 				['Location', url.origin],
+				['Set-Cookie', `${sessionKey}=${sessionToken}; path=/; HttpOnly`],
 				['Set-Cookie', `access_token=${accessToken.access_token}; path=/; HttpOnly`],
 				['Set-Cookie', `refresh_token=${accessToken.refresh_token}; path=/; HttpOnly`],
 				[
