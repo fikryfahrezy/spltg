@@ -5,9 +5,10 @@ import {
 	SPOTIFY_CLIENT_SECRET,
 	SPOTIFY_CLIENT_ID,
 	SPOTIFY_TOKEN_URL,
-	SPOTIFY_USER_INFO_URL
+	SPOTIFY_USER_INFO_URL,
+	SPOTIFY_AUTH_CALLBACK_PATH
 } from '$env/static/private';
-import { spotifyAuthStateKey, spotifyAuthCallbackPath } from '$lib/constants';
+import { spotifyAuthStateKey } from '$lib/constants';
 
 export const GET: RequestHandler = async ({ url, cookies }) => {
 	// requests refresh and access tokens
@@ -36,7 +37,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 			},
 			body: new URLSearchParams({
 				code: code,
-				redirect_uri: `${url.origin}${spotifyAuthCallbackPath}`,
+				redirect_uri: `${url.origin}${SPOTIFY_AUTH_CALLBACK_PATH}`,
 				grant_type: 'authorization_code'
 			})
 		})

@@ -1,7 +1,11 @@
 import crypto from 'node:crypto';
 import type { RequestHandler } from './$types';
-import { SPOTIFY_AUTHORIZATION_URL, SPOTIFY_CLIENT_ID } from '$env/static/private';
-import { spotifyAuthStateKey, spotifyAuthCallbackPath } from '$lib/constants';
+import {
+	SPOTIFY_AUTHORIZATION_URL,
+	SPOTIFY_CLIENT_ID,
+	SPOTIFY_AUTH_CALLBACK_PATH
+} from '$env/static/private';
+import { spotifyAuthStateKey } from '$lib/constants';
 
 function generateRandomString(length: number) {
 	return crypto.randomBytes(60).toString('hex').slice(0, length);
@@ -17,7 +21,7 @@ export const GET: RequestHandler = ({ url }) => {
 		new URLSearchParams({
 			response_type: 'code',
 			client_id: SPOTIFY_CLIENT_ID,
-			redirect_uri: `${url.origin}${spotifyAuthCallbackPath}`,
+			redirect_uri: `${url.origin}${SPOTIFY_AUTH_CALLBACK_PATH}`,
 			state: state
 		});
 
