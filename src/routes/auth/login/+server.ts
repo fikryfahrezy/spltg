@@ -11,7 +11,7 @@ function generateRandomString(length: number) {
 	return crypto.randomBytes(60).toString('hex').slice(0, length);
 }
 
-export const GET: RequestHandler = ({ url }) => {
+export const GET: RequestHandler = async ({ url }) => {
 	const state = generateRandomString(16);
 
 	// requests authorization
@@ -27,9 +27,9 @@ export const GET: RequestHandler = ({ url }) => {
 
 	return new Response(null, {
 		status: 302,
-		headers: {
-			Location: redirectURL,
-			'Set-Cookie': `${spotifyAuthStateKey}=${state}; path=/`
-		}
+		headers: [
+			['Location', redirectURL],
+			['Set-Cookie', `${spotifyAuthStateKey}=${state}; path=/; HttpOnly`],
+		]
 	});
 };
