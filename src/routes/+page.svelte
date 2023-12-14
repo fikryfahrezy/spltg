@@ -3,8 +3,8 @@
 	import type { CurrentlyPlayingTrack } from '$lib/spotifyapi.type';
 	import SpotifySDK from '$lib/SpotifySDK.svelte';
 
-	// const session = $page.data.session;
-	// const accessToken = session?.access_token;
+	const session = $page.data.session;
+	const accessToken = $page.data.access_token;
 	const minuteInMS = 1000;
 
 	let spotifyPlayer: SpotifySDK;
@@ -44,11 +44,11 @@
 	});
 </script>
 
-{#if true}
+{#if !session}
 	<div class="login-container">
 		<a href="/auth/login">Log in with Spotify</a>
 	</div>
-{:else if false}
+{:else}
 	<main class="root">
 		<div class="page-container">
 			<div class="music-container">
@@ -75,7 +75,7 @@
 				bind:this={spotifyPlayer}
 				name="Spotify Listen Together"
 				getOAuthToken={function (cb) {
-					// cb(accessToken);
+					cb(accessToken);
 				}}
 			/>
 			{currentlyPlayingTrack?.item?.name}
