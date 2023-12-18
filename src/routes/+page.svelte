@@ -11,7 +11,7 @@
 
 	let currentlyPlayingTrack = $state<CurrentlyPlayingTrack>();
 	let progress = $state<number>(0);
-	let progressIntervalId = $state<NodeJS.Timeout>();
+	let progressIntervalId = $state<number>();
 
 	function getCurrentlyPlaying() {
 		if (!spotifyPlayer) {
@@ -25,7 +25,7 @@
 				progress = res.progress_ms ?? 0;
 			})
 			.then(() => {
-				progressIntervalId = setInterval(() => {
+				progressIntervalId = window.setInterval(() => {
 					progress += minuteInMS;
 
 					const durationMs = currentlyPlayingTrack?.item?.duration_ms;
