@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer';
 import type { RequestHandler } from './$types';
-import type { SpotifyAccessTokenResponse, SpotifyCurrentProfile } from '../../../types';
+import type { SpotifyAccessTokenResponse, SpotifyCurrentProfile } from '../../../types/spotify';
 import {
 	SPOTIFY_CLIENT_SECRET,
 	SPOTIFY_CLIENT_ID,
