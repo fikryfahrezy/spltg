@@ -1,10 +1,8 @@
 <script lang="ts">
 	import type {
 		SpotifyPlayer,
-		SpotifyPlayerConstructorOption,
+		SpotifyPlayerProps,
 		SpotifyEventListeners,
-		SpotifyOnError,
-		WebPlaybackError,
 		WebPlaybackState
 	} from './spotifysdk.type';
 
@@ -12,11 +10,52 @@
 
 	const spotifyAPIURL = 'https://api.spotify.com/v1';
 
-	let { getOAuthToken, name, enableMediaSession, volume } =
-		$props<SpotifyPlayerConstructorOption>();
+	const defaultPlayer: SpotifyPlayer = {
+		removeListener() {
+			return false;
+		},
+		async getCurrentState() {
+			return null;
+		},
+		async setName() {},
+		async getVolume() {
+			return 0;
+		},
+		async setVolume() {},
+		async pause() {},
+		async resume() {},
+		async togglePlay() {},
+		async seek() {},
+		async previousTrack() {},
+		async nextTrack() {},
+		async activateElement() {},
+		disconnect() {},
+		async connect() {
+			return false;
+		},
+		addListener() {
+			return false;
+		},
+		on() {}
+	};
 
-	let token: string;
-	let player: SpotifyPlayer;
+	let {
+		getOAuthToken,
+		name,
+		enableMediaSession,
+		volume,
+		onAccountError,
+		onAuthenticationError,
+		onAutoplayFailed,
+		onInitializationError,
+		onNotReady,
+		onPlaybackError,
+		onPlayerStateChanged,
+		onReady
+	} = $props<SpotifyPlayerProps>();
+
+	let token = $state<string>('');
+	let player = $state<SpotifyPlayer>(defaultPlayer);
 
 	$effect(function () {
 		const script = document.createElement('script');
@@ -37,26 +76,41 @@
 				enableMediaSession,
 				volume
 			});
+
+			if (onReady !== undefined) {
+				player.addListener('ready', onReady);
+			}
+			if (onNotReady !== undefined) {
+				player.addListener('not_ready', onNotReady);
+			}
+			if (onPlayerStateChanged !== undefined) {
+				player.addListener('player_state_changed', onPlayerStateChanged);
+			}
+			if (onAutoplayFailed !== undefined) {
+				player.addListener('autoplay_failed', onAutoplayFailed);
+			}
+
+			if (onInitializationError !== undefined) {
+				player.on('initialization_error', onInitializationError);
+			}
+			if (onAccountError !== undefined) {
+				player.on('account_error', onAccountError);
+			}
+			if (onAuthenticationError !== undefined) {
+				player.on('authentication_error', onAuthenticationError);
+			}
+			if (onPlaybackError !== undefined) {
+				player.on('playback_error', onPlaybackError);
+			}
 			player.connect();
 		};
 	});
-
-	export function addListener<TEvent extends keyof SpotifyEventListeners>(
-		event: TEvent,
-		callback: SpotifyEventListeners[TEvent]
-	): boolean {
-		return player.addListener(event, callback);
-	}
 
 	export function removeListener<TEvent extends keyof SpotifyEventListeners>(
 		event: TEvent,
 		callback?: () => void
 	): boolean {
 		return player.removeListener(event, callback);
-	}
-
-	export function on(event: SpotifyOnError, callback: (response: WebPlaybackError) => void): void {
-		return player.on(event, callback);
 	}
 
 	export function getCurrentState(): Promise<WebPlaybackState | null> {
@@ -114,11 +168,24 @@
 	}
 
 	export function request(path: string, init?: RequestInit) {
-		return fetch(`${spotifyAPIURL}${path}`, {
-			headers: {
-				Authorization: `Bearer ${token}`
-			},
-			...init
+		let intervalId: number = 0;
+
+		return new Promise<Response>((resolve) => {
+			intervalId = window.setInterval(() => {
+				if (!token) {
+					return;
+				}
+
+				const response = fetch(`${spotifyAPIURL}${path}`, {
+					headers: {
+						Authorization: `Bearer ${token}`
+					},
+					...init
+				});
+
+				clearInterval(intervalId);
+				resolve(response);
+			}, 500);
 		});
 	}
 </script>

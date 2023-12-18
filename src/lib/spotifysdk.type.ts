@@ -74,35 +74,40 @@ export type WebPlaybackError = {
 };
 
 type SpotifyReadyEvent = 'ready';
-type SpotifyReadyEventLitener = {
+type SpotifyReadyEventListener = {
 	[k in SpotifyReadyEvent]: (response: WebPlaybackPlayer) => void;
 };
 
 type SpotifyNotReadyEvent = 'not_ready';
-type SpotifyNotReadyEventLitener = {
+type SpotifyNotReadyEventListener = {
 	[k in SpotifyNotReadyEvent]: (response: WebPlaybackPlayer) => void;
 };
 
 type SpotifyPlayerStateChangedEvent = 'player_state_changed';
-type SpotifyPlayerStateChangedEventLitener = {
+type SpotifyPlayerStateChangedEventListener = {
 	[k in SpotifyPlayerStateChangedEvent]: (response: WebPlaybackState) => void;
 };
 
 type SpotifyAutoplayFailedEvent = 'autoplay_failed';
-type SpotifyAutoplayFailedEventLitener = {
+type SpotifyAutoplayFailedEventListener = {
 	[k in SpotifyAutoplayFailedEvent]: (response: null) => void;
 };
 
-export type SpotifyEventListeners = SpotifyReadyEventLitener &
-	SpotifyNotReadyEventLitener &
-	SpotifyPlayerStateChangedEventLitener &
-	SpotifyAutoplayFailedEventLitener;
+export type SpotifyEventListeners = SpotifyReadyEventListener &
+	SpotifyNotReadyEventListener &
+	SpotifyPlayerStateChangedEventListener &
+	SpotifyAutoplayFailedEventListener;
 
 export type SpotifyOnError =
 	| 'initialization_error'
 	| 'authentication_error'
 	| 'account_error'
 	| 'playback_error';
+type SpotifyOnErrorListeners = {
+	[k in SpotifyOnError]: (response: WebPlaybackError) => void;
+};
+
+type SpotifyListeners = SpotifyEventListeners & SpotifyOnErrorListeners;
 
 export interface SpotifyPlayer {
 	connect(): Promise<boolean>;
@@ -115,7 +120,10 @@ export interface SpotifyPlayer {
 		event: TEvent,
 		callback?: () => void
 	): boolean;
-	on(event: SpotifyOnError, callback: (response: WebPlaybackError) => void): void;
+	on<TError extends keyof SpotifyOnErrorListeners>(
+		event: TError,
+		callback: SpotifyOnErrorListeners[TError]
+	): void;
 	getCurrentState(): Promise<WebPlaybackState | null>;
 	setName(name: string): Promise<void>;
 	/**
@@ -152,3 +160,18 @@ export interface SpotifyPlayerConstructor {
 export type Spotify = {
 	Player: SpotifyPlayerConstructor;
 };
+
+type SnakeToPascal<S extends string> = S extends `${infer Head}_${infer Tail}`
+	? `${Capitalize<Head>}${Capitalize<SnakeToPascal<Tail>>}`
+	: Capitalize<S>;
+
+// type PascalToCamel<S extends string> = S extends `${infer First}${infer Rest}`
+// 	? SnakeToPascal<`${Uncapitalize<First>}${Rest}`>
+// 	: S;
+
+type SpotifyListenerPropsCallback = {
+	[Property in keyof SpotifyListeners as `on${SnakeToPascal<Property>}`]: SpotifyListeners[Property];
+};
+
+export type SpotifyPlayerProps = SpotifyPlayerConstructorOption &
+	Partial<SpotifyListenerPropsCallback>;
