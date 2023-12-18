@@ -22,7 +22,8 @@ export const GET: RequestHandler = async ({ cookies }) => {
 	const sessionResponse: Session = {
 		email: session?.email,
 		name: session?.name,
-		picture: session?.picture
+		picture: session?.picture,
+		access_token: session?.access_token
 	};
 
 	return new Response(JSON.stringify(sessionResponse), {

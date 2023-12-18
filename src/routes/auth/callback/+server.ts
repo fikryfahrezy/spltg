@@ -17,8 +17,7 @@ const onErrorResponse = (origin: string) => {
 		status: 302,
 		headers: [
 			['Location', `${origin}/error`], // TODO: implement error page
-			['Set-Cookie', `access_token=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`],
-			['Set-Cookie', `refresh_token=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`],
+			['Set-Cookie', `${sessionKey}=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`],
 			[
 				'Set-Cookie',
 				`${spotifyAuthStateKey}=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
@@ -81,7 +80,9 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 				name: userInfo?.display_name ?? null,
 				email: userInfo?.email ?? null,
 				picture: userInfo?.images?.[0]?.url ?? null,
-				exp: accessToken.expires_in
+				exp: accessToken.expires_in,
+				access_token: accessToken.access_token,
+				refresh_token: accessToken.refresh_token
 			}
 		});
 
@@ -90,8 +91,6 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 			headers: [
 				['Location', url.origin],
 				['Set-Cookie', `${sessionKey}=${sessionToken}; path=/; HttpOnly`],
-				['Set-Cookie', `access_token=${accessToken.access_token}; path=/; HttpOnly`],
-				['Set-Cookie', `refresh_token=${accessToken.refresh_token}; path=/; HttpOnly`],
 				[
 					'Set-Cookie',
 					`${spotifyAuthStateKey}=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`

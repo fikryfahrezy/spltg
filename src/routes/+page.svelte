@@ -4,7 +4,7 @@
 	import SpotifySDK from '$lib/SpotifySDK.svelte';
 
 	const session = $page.data.session;
-	const accessToken = $page.data.access_token;
+	const accessToken = session?.access_token;
 	const minuteInMS = 1000;
 
 	let spotifyPlayer: SpotifySDK;
