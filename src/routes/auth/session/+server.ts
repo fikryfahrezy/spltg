@@ -2,6 +2,7 @@ import type { RequestHandler } from './$types';
 import { AUTH_SECRET } from '$env/static/private';
 import { sessionKey } from '$lib/constants';
 import { decode } from '$lib/jwt';
+import type { Session } from '../../../types/session';
 
 export const GET: RequestHandler = async ({ cookies }) => {
 	const sessionToken = cookies.get(sessionKey);
@@ -18,15 +19,14 @@ export const GET: RequestHandler = async ({ cookies }) => {
 		token: sessionToken
 	});
 
-	return new Response(
-		JSON.stringify({
-			email: session?.email,
-			name: session?.name,
-			picture: session?.picture
-		}),
-		{
-			status: 200,
-			headers: [['Content-Type', 'application/json']]
-		}
-	);
+	const sessionResponse: Session = {
+		email: session?.email,
+		name: session?.name,
+		picture: session?.picture
+	};
+
+	return new Response(JSON.stringify(sessionResponse), {
+		status: 200,
+		headers: [['Content-Type', 'application/json']]
+	});
 };
