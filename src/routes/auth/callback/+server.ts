@@ -39,7 +39,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	}
 
 	try {
-		const { accessToken, userInfo } = await fetch(SPOTIFY_TOKEN_URL, {
+		const accessTokenResponse = await fetch(SPOTIFY_TOKEN_URL, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/x-www-form-urlencoded',
@@ -51,26 +51,17 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 				redirect_uri: `${url.origin}${SPOTIFY_AUTH_CALLBACK_PATH}`,
 				grant_type: 'authorization_code'
 			})
-		})
-			.then((res) => {
-				return res.json() as Promise<SpotifyAccessTokenResponse>;
-			})
-			.then((accessToken) => {
-				return Promise.all([
-					accessToken,
-					fetch(SPOTIFY_USER_INFO_URL, {
-						headers: {
-							Authorization: 'Bearer ' + accessToken.access_token
-						}
-					})
-				]);
-			})
-			.then(([accessToken, res]) => {
-				return Promise.all([accessToken, res.json() as Promise<SpotifyCurrentProfile>]);
-			})
-			.then(([accessToken, userInfo]) => {
-				return { accessToken, userInfo };
-			});
+		});
+
+		const accessToken: SpotifyAccessTokenResponse = await accessTokenResponse.json();
+
+		const profileResponse = await fetch(SPOTIFY_USER_INFO_URL, {
+			headers: {
+				Authorization: 'Bearer ' + accessToken.access_token
+			}
+		});
+
+		const userInfo: SpotifyCurrentProfile = await profileResponse.json();
 
 		const sessionToken = await encode({
 			salt: sessionKey,
