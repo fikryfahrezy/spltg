@@ -57,8 +57,8 @@
 			</div>
 			<div class="chat-room-container">
 				<div class="profile-container">
-					<!-- <p>Hi, {session.user.name}!</p> -->
-					<!-- <button on:click={() => signOut()}>Sign out</button> -->
+					<p>Hi, {session.name}!</p>
+					<a href="/auth/logout">Log out</a>
 				</div>
 				<div class="chat-list-container">
 					{#each Array.from(Array(100), () => 'Lorem ipsum dolor sit amet.') as chat}
