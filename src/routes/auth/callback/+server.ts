@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { spotifyAuthStateKey, sessionKey } from '$lib/constants';
+import { spotifyAuthStateKey, sessionKey, refreshTokenKey } from '$lib/constants';
 import { getToken } from '$lib/token';
 
 const onErrorResponse = (origin: string) => {
@@ -8,6 +8,7 @@ const onErrorResponse = (origin: string) => {
 		headers: [
 			['Location', `${origin}/error`], // TODO: implement error page
 			['Set-Cookie', `${sessionKey}=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`],
+			['Set-Cookie', `${refreshTokenKey}=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`],
 			[
 				'Set-Cookie',
 				`${spotifyAuthStateKey}=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
@@ -40,6 +41,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 			headers: [
 				['Location', url.origin],
 				['Set-Cookie', `${sessionKey}=${sessionToken}; path=/; HttpOnly`],
+				['Set-Cookie', `${refreshTokenKey}=${accessToken.refresh_token}; path=/; HttpOnly`],
 				[
 					'Set-Cookie',
 					`${spotifyAuthStateKey}=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`

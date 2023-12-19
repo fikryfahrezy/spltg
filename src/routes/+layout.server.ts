@@ -1,9 +1,10 @@
 import type { LayoutServerLoad } from './$types';
-import { AUTH_SECRET, SPOTIFY_AUTH_REFRESH_TOKEN_PATH } from '$env/static/private';
-import { encode, decode } from '$lib/jwt';
-import { sessionKey } from '$lib/constants';
+import { AUTH_SECRET } from '$env/static/private';
+import { decode, type JWT } from '$lib/jwt';
+import { sessionKey, refreshTokenKey } from '$lib/constants';
+import { getToken, type GetTokenReturnType } from '$lib/token';
+
 import type { Session } from '../types/session';
-import type { SpotifyAccessTokenResponse } from '../types/spotify';
 
 export const load: LayoutServerLoad<{ session: Session | null }> = async ({
 	url,
@@ -11,18 +12,58 @@ export const load: LayoutServerLoad<{ session: Session | null }> = async ({
 	cookies
 }) => {
 	const sessionToken = cookies.get(sessionKey);
+	const refreshToken = cookies.get(refreshTokenKey);
 
-	if (sessionToken === undefined) {
+	if (sessionToken === undefined || refreshToken === null) {
 		return {
 			session: null
 		};
 	}
 
-	const session = await decode({
-		salt: sessionKey,
-		secret: AUTH_SECRET,
-		token: sessionToken
+	const sessionPromise = await new Promise<{ error: boolean; value: JWT | null }>((resolve) => {
+		decode({
+			salt: sessionKey,
+			secret: AUTH_SECRET,
+			token: sessionToken
+		})
+			.then((jwt) => {
+				resolve({ error: false, value: jwt });
+			})
+			.catch(() => {
+				resolve({ error: true, value: null });
+			});
 	});
+
+	if (sessionPromise.error) {
+		const { jwt, sessionToken, accessToken } = await getToken({
+			type: 'refresh',
+			origin: url.origin,
+			headers: request.headers
+		});
+
+		const newSession: Session = {
+			email: jwt.email,
+			name: jwt.name,
+			picture: jwt.picture,
+			access_token: accessToken.access_token
+		};
+
+		cookies.set(sessionKey, sessionToken, {
+			path: '/',
+			httpOnly: true
+		});
+
+		cookies.set(refreshTokenKey, accessToken.refresh_token, {
+			path: '/',
+			httpOnly: true
+		});
+
+		return {
+			session: newSession
+		};
+	}
+
+	const session = sessionPromise.value;
 
 	if (session === null) {
 		return {
@@ -30,55 +71,53 @@ export const load: LayoutServerLoad<{ session: Session | null }> = async ({
 		};
 	}
 
-	try {
-		if (session.exp !== undefined && Date.now() < session.exp * 1000) {
-			return {
-				session: {
-					email: session.email,
-					name: session.name,
-					picture: session.picture,
-					access_token: session.access_token
-				}
-			};
-		}
-
-		const res = await fetch(`${url.origin}${SPOTIFY_AUTH_REFRESH_TOKEN_PATH}`, {
-			headers: request.headers
-		});
-		const newAccessToken: SpotifyAccessTokenResponse = await res.json();
-
-		const newSessionToken = await encode({
-			salt: sessionKey,
-			secret: AUTH_SECRET,
-			maxAge: newAccessToken.expires_in,
-			token: {
-				name: session?.name,
-				email: session?.email,
-				picture: session?.picture,
-				exp: newAccessToken.expires_in,
-				access_token: newAccessToken.access_token,
-				refresh_token: newAccessToken.refresh_token ?? session.refresh_token
-			}
-		});
-
-		cookies.set(sessionKey, newSessionToken, {
-			path: '/',
-			httpOnly: true
-		});
-
-		const newSession: Session = {
-			email: session.email,
-			name: session.name,
-			picture: session.picture,
-			access_token: newAccessToken.access_token
-		};
-
+	if (session.exp !== undefined && Date.now() < session.exp * 1000) {
 		return {
-			session: newSession
+			session: {
+				email: session.email,
+				name: session.name,
+				picture: session.picture,
+				access_token: session.access_token
+			}
 		};
-	} catch (e) {
+	}
+
+	const newToken = await new Promise<
+		{ error: false; value: GetTokenReturnType } | { error: true; value: null }
+	>((resolve) => {
+		getToken({
+			type: 'refresh',
+			origin: url.origin,
+			headers: request.headers,
+			prevJWT: session
+		})
+			.then((token) => {
+				resolve({ error: false, value: token });
+			})
+			.catch(() => {
+				resolve({ error: true, value: null });
+			});
+	});
+
+	if (newToken.error) {
 		return {
 			session: null
 		};
 	}
+
+	cookies.set(sessionKey, newToken.value.sessionToken, {
+		path: '/',
+		httpOnly: true
+	});
+
+	const newSession: Session = {
+		email: session.email,
+		name: session.name,
+		picture: session.picture,
+		access_token: newToken.value.accessToken.access_token
+	};
+
+	return {
+		session: newSession
+	};
 };
