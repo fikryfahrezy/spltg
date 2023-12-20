@@ -30,7 +30,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	}
 
 	try {
-		const { accessToken, sessionToken } = await getToken({
+		const { jwt, sessionToken } = await getToken({
 			type: 'fresh',
 			code: code,
 			origin: url.origin
@@ -41,7 +41,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 			headers: [
 				['Location', url.origin],
 				['Set-Cookie', `${sessionKey}=${sessionToken}; path=/; HttpOnly`],
-				['Set-Cookie', `${refreshTokenKey}=${accessToken.refresh_token}; path=/; HttpOnly`],
+				['Set-Cookie', `${refreshTokenKey}=${jwt.refresh_token}; path=/; HttpOnly`],
 				[
 					'Set-Cookie',
 					`${spotifyAuthStateKey}=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`

@@ -37,7 +37,6 @@ type GetTokenParams = (GetTokenFreshTokenParams | GetTokenRereshTokenParams) & {
 
 export type GetTokenReturnType = {
 	sessionToken: string;
-	accessToken: SpotifyAccessTokenResponse;
 	jwt: JWT;
 };
 
@@ -104,5 +103,5 @@ export async function getToken(params: GetTokenParams): Promise<GetTokenReturnTy
 		token: jwt
 	});
 
-	return { sessionToken, accessToken, jwt };
+	return { sessionToken, jwt };
 }

@@ -35,7 +35,7 @@ export const load: LayoutServerLoad<{ session: Session | null }> = async ({
 	});
 
 	if (sessionPromise.error) {
-		const { jwt, sessionToken, accessToken } = await getToken({
+		const { jwt, sessionToken } = await getToken({
 			type: 'refresh',
 			origin: url.origin,
 			headers: request.headers,
@@ -46,7 +46,7 @@ export const load: LayoutServerLoad<{ session: Session | null }> = async ({
 			email: jwt.email,
 			name: jwt.name,
 			picture: jwt.picture,
-			access_token: accessToken.access_token
+			access_token: jwt.access_token
 		};
 
 		cookies.set(sessionKey, sessionToken, {
@@ -54,10 +54,12 @@ export const load: LayoutServerLoad<{ session: Session | null }> = async ({
 			httpOnly: true
 		});
 
-		cookies.set(refreshTokenKey, accessToken.refresh_token, {
-			path: '/',
-			httpOnly: true
-		});
+		if (typeof jwt.refresh_token === 'string') {
+			cookies.set(refreshTokenKey, jwt.refresh_token, {
+				path: '/',
+				httpOnly: true
+			});
+		}
 
 		return {
 			session: newSession
@@ -115,7 +117,7 @@ export const load: LayoutServerLoad<{ session: Session | null }> = async ({
 		email: session.email,
 		name: session.name,
 		picture: session.picture,
-		access_token: newToken.value.accessToken.access_token
+		access_token: newToken.value.jwt.access_token
 	};
 
 	return {
