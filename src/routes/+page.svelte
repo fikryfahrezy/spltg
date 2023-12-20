@@ -45,32 +45,39 @@
 </script>
 
 {#if !session}
-	<div class="login-container">
+	<div class="h-screen flex justify-center items-center">
 		<a href="/auth/login">Log in with Spotify</a>
 	</div>
 {:else}
-	<main class="root">
-		<div class="page-container">
-			<div class="music-container">
-				<div class="music-preview-container"></div>
-				<div class="music-list-container"></div>
+	<main class="h-screen flex flex-col">
+		<div class="flex h-90% <lg:flex-col">
+			<div class="flex flex-grow-3 flex-shrink-1 basis-0% <lg:h-40%">
+				<div
+					class="flex-grow-3 flex-shrink-1 basis-0% border border-solid border-gray <lg:hidden"
+				></div>
+				<div class="flex-grow-2 flex-shrink-1 basis-0% border border-solid border-gray"></div>
 			</div>
-			<div class="chat-room-container">
-				<div class="profile-container">
+
+			<div
+				class="flex flex-col flex-grow-1 flex-shrink-1 basis-0% border border-solid border-gray <lg:h-60%"
+			>
+				<div class="h-5% flex justify-between items-center border border-solid border-gray">
 					<p>Hi, {session.name}!</p>
 					<a href="/auth/logout">Log out</a>
 				</div>
-				<div class="chat-list-container">
+				<div class="h-90% overflow-scroll">
 					{#each Array.from(Array(100), () => 'Lorem ipsum dolor sit amet.') as chat}
 						<p>{chat}</p>
 					{/each}
 				</div>
-				<form class="chat-form">
-					<input name="message" class="chat-input" placeholder="Chat here..." />
+				<form class="h-5%">
+					<input name="message" class="w-full h-full" placeholder="Chat here..." />
 				</form>
 			</div>
 		</div>
-		<footer class="music-controller-container">
+		<footer
+			class="h-15% flex items-center border border-solid border-gray [&>*]:w-33% [&>*]:flex-grow-1 [&>*]:flex-shrink-1 [&>*]:basis-0%"
+		>
 			<SpotifySDK
 				bind:this={spotifyPlayer}
 				name="Spotify Listen Together"
@@ -80,107 +87,10 @@
 			/>
 			{currentlyPlayingTrack?.item?.name}
 			<progress
-				class="music-progress"
+				class="w-full"
 				max={currentlyPlayingTrack?.item?.duration_ms ?? 0}
 				value={progress}
 			/>
 		</footer>
 	</main>
 {/if}
-
-<style>
-	.login-container {
-		display: flex;
-		height: 100vh;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.root {
-		height: 100vh;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.page-container {
-		display: flex;
-		height: 90%;
-	}
-
-	@media screen and (max-width: 1024px) {
-		.page-container {
-			flex-direction: column;
-		}
-	}
-
-	.music-controller-container {
-		height: 15%;
-		border: 1px solid grey;
-	}
-
-	.music-container {
-		display: flex;
-		flex: 3;
-	}
-
-	@media screen and (max-width: 1024px) {
-		.music-container {
-			height: 40%;
-		}
-	}
-
-	.music-list-container {
-		flex: 2;
-		border: 1px solid grey;
-	}
-
-	.music-preview-container {
-		flex: 1;
-		border: 1px solid grey;
-	}
-
-	@media screen and (max-width: 1024px) {
-		.music-preview-container {
-			display: none;
-		}
-	}
-
-	.chat-room-container {
-		display: flex;
-		flex-direction: column;
-		flex: 1;
-		border: 1px solid grey;
-	}
-
-	@media screen and (max-width: 1024px) {
-		.chat-room-container {
-			height: 60%;
-		}
-	}
-
-	.chat-list-container {
-		height: 90%;
-		overflow: scroll;
-	}
-
-	.profile-container {
-		display: flex;
-		height: 5%;
-		border: 1px solid grey;
-		align-items: center;
-		justify-content: space-between;
-	}
-
-	.chat-form {
-		height: 5%;
-	}
-
-	.chat-input {
-		width: 100%;
-		height: 100%;
-	}
-
-	.music-progress {
-		width: 100%;
-	}
-</style>
