@@ -14,7 +14,7 @@ export const load: LayoutServerLoad<{ session: Session | null }> = async ({
 	const sessionToken = cookies.get(sessionKey);
 	const refreshToken = cookies.get(refreshTokenKey);
 
-	if (sessionToken === undefined || refreshToken === null) {
+	if (sessionToken === undefined || refreshToken === undefined) {
 		return {
 			session: null
 		};
@@ -38,7 +38,8 @@ export const load: LayoutServerLoad<{ session: Session | null }> = async ({
 		const { jwt, sessionToken, accessToken } = await getToken({
 			type: 'refresh',
 			origin: url.origin,
-			headers: request.headers
+			headers: request.headers,
+			prevRefreshToken: refreshToken
 		});
 
 		const newSession: Session = {

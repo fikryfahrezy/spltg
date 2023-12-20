@@ -11,18 +11,27 @@ import { encode, type JWT } from '$lib/jwt';
 import { sessionKey } from '$lib/constants';
 import type { SpotifyAccessTokenResponse, SpotifyCurrentProfile } from '../types/spotify';
 
-type GetTokenFreshtokenParams = {
+type GetTokenFreshTokenParams = {
 	type: 'fresh';
 	code: string;
 };
 
-type GetTokenRereshtokenParams = {
+type GetTokenRereshtokenParamsJWT = {
+	prevJWT: JWT;
+	prevRefreshToken?: undefined;
+};
+
+type GetTokenRereshTokenParamsPrev = {
+	prevJWT?: undefined;
+	prevRefreshToken: string;
+};
+
+type GetTokenRereshTokenParams = (GetTokenRereshtokenParamsJWT | GetTokenRereshTokenParamsPrev) & {
 	type: 'refresh';
-	prevJWT?: JWT;
 	headers: Headers;
 };
 
-type GetTokenParams = (GetTokenFreshtokenParams | GetTokenRereshtokenParams) & {
+type GetTokenParams = (GetTokenFreshTokenParams | GetTokenRereshTokenParams) & {
 	origin: string;
 };
 
@@ -54,8 +63,9 @@ export async function getToken(params: GetTokenParams): Promise<GetTokenReturnTy
 
 	const accessToken: SpotifyAccessTokenResponse = await res.json();
 
+	let jwt: JWT = {};
 	if (params.type === 'refresh' && params.prevJWT !== undefined) {
-		const jwt: JWT = {
+		jwt = {
 			name: params.prevJWT?.name,
 			email: params.prevJWT?.email,
 			picture: params.prevJWT?.picture,
@@ -63,33 +73,29 @@ export async function getToken(params: GetTokenParams): Promise<GetTokenReturnTy
 			access_token: accessToken.access_token,
 			refresh_token: accessToken.refresh_token ?? params.prevJWT.refresh_token
 		};
-
-		const sessionToken = await encode({
-			salt: sessionKey,
-			secret: AUTH_SECRET,
-			maxAge: accessToken.expires_in + accessToken.expires_in / 4,
-			token: jwt
+	} else {
+		const profileResponse = await fetch(SPOTIFY_USER_INFO_URL, {
+			headers: {
+				Authorization: 'Bearer ' + accessToken.access_token
+			}
 		});
 
-		return { sessionToken, accessToken, jwt };
+		const userInfo: SpotifyCurrentProfile = await profileResponse.json();
+
+		const newRefreshToken =
+			params.type === 'refresh' && params.prevRefreshToken !== undefined
+				? accessToken.refresh_token ?? params.prevRefreshToken
+				: accessToken.refresh_token;
+
+		jwt = {
+			name: userInfo?.display_name ?? null,
+			email: userInfo?.email ?? null,
+			picture: userInfo?.images?.[0]?.url ?? null,
+			exp: accessToken.expires_in,
+			access_token: accessToken.access_token,
+			refresh_token: newRefreshToken
+		};
 	}
-
-	const profileResponse = await fetch(SPOTIFY_USER_INFO_URL, {
-		headers: {
-			Authorization: 'Bearer ' + accessToken.access_token
-		}
-	});
-
-	const userInfo: SpotifyCurrentProfile = await profileResponse.json();
-
-	const jwt: JWT = {
-		name: userInfo?.display_name ?? null,
-		email: userInfo?.email ?? null,
-		picture: userInfo?.images?.[0]?.url ?? null,
-		exp: accessToken.expires_in,
-		access_token: accessToken.access_token,
-		refresh_token: accessToken.refresh_token
-	};
 
 	const sessionToken = await encode({
 		salt: sessionKey,
