@@ -1,28 +1,16 @@
 import { Buffer } from 'node:buffer';
 import type { RequestHandler } from './$types';
-import {
-	AUTH_SECRET,
-	SPOTIFY_TOKEN_URL,
-	SPOTIFY_CLIENT_ID,
-	SPOTIFY_CLIENT_SECRET
-} from '$env/static/private';
-import { sessionKey } from '$lib/constants';
-import { decode } from '$lib/jwt';
+import { SPOTIFY_TOKEN_URL, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET } from '$env/static/private';
+import { refreshTokenKey } from '$lib/constants';
 
 export const GET: RequestHandler = async ({ cookies }) => {
-	const sessionToken = cookies.get(sessionKey);
+	const refreshToken = cookies.get(refreshTokenKey);
 
-	if (sessionToken === undefined) {
+	if (refreshToken === undefined) {
 		return new Response(null, {
 			status: 401
 		});
 	}
-
-	const session = await decode({
-		salt: sessionKey,
-		secret: AUTH_SECRET,
-		token: sessionToken
-	});
 
 	const res = await fetch(SPOTIFY_TOKEN_URL, {
 		method: 'POST',
@@ -33,7 +21,7 @@ export const GET: RequestHandler = async ({ cookies }) => {
 		},
 		body: new URLSearchParams({
 			grant_type: 'refresh_token',
-			refresh_token: session?.refresh_token ?? ''
+			refresh_token: refreshToken ?? ''
 		})
 	});
 
