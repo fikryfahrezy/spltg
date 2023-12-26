@@ -76,22 +76,65 @@
 				</form>
 			</div>
 		</div>
+		<SpotifySDK
+			bind:this={spotifyPlayer}
+			name="Spotify Listen Together"
+			getOAuthToken={function (cb) {
+				cb(accessToken);
+			}}
+		/>
 		<footer
-			class="h-15% flex items-center border border-solid border-gray [&>*]:w-33% [&>*]:flex-grow-1 [&>*]:flex-shrink-1 [&>*]:basis-0%"
+			class="h-15% p-20px flex items-center border border-solid border-gray [&>*]:w-33% [&>*]:flex-grow-1 [&>*]:flex-shrink-1 [&>*]:basis-0%"
 		>
-			<SpotifySDK
-				bind:this={spotifyPlayer}
-				name="Spotify Listen Together"
-				getOAuthToken={function (cb) {
-					cb(accessToken);
-				}}
-			/>
-			{currentlyPlayingTrack?.item?.name}
-			<progress
-				class="w-full"
-				max={currentlyPlayingTrack?.item?.duration_ms ?? 0}
-				value={progress}
-			/>
+			{#if currentlyPlayingTrack !== null}
+				<div class="flex items-center gap-20px">
+					<img
+						src={currentlyPlayingTrack.item?.album.images[2].url}
+						alt="Player Album"
+						width="56"
+						height="56"
+					/>
+					<div>
+						<a
+							target="_blank"
+							referrerpolicy="no-referrer"
+							href={currentlyPlayingTrack.item?.album.external_urls.spotify}
+						>
+							{currentlyPlayingTrack.item?.name}
+						</a>
+						<div>
+							{#each currentlyPlayingTrack.item?.artists ?? [] as artist, index}
+								<span class="text-12px">
+									{#if index !== 0}
+										,{' '}
+									{/if}
+									<a
+										target="_blank"
+										referrerpolicy="no-referrer"
+										href={artist.external_urls.spotify}
+									>
+										{artist.name}
+									</a>
+								</span>
+							{/each}
+						</div>
+					</div>
+					<a
+						target="_blank"
+						referrerpolicy="no-referrer"
+						href={currentlyPlayingTrack.item?.external_urls.spotify}
+					>
+						❤️
+					</a>
+				</div>
+				<progress
+					class="w-full"
+					max={currentlyPlayingTrack.item?.duration_ms ?? 0}
+					value={progress}
+				/>
+			{:else}
+				<p>Loading...</p>
+			{/if}
 		</footer>
 	</main>
 {/if}
