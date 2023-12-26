@@ -1,21 +1,7 @@
 import type { RequestHandler } from './$types';
 import { spotifyAuthStateKey, sessionKey, refreshTokenKey } from '$lib/constants';
 import { getToken } from '$lib/token';
-
-const onErrorResponse = (origin: string) => {
-	return new Response(null, {
-		status: 302,
-		headers: [
-			['Location', `${origin}/error`], // TODO: implement error page
-			['Set-Cookie', `${sessionKey}=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`],
-			['Set-Cookie', `${refreshTokenKey}=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`],
-			[
-				'Set-Cookie',
-				`${spotifyAuthStateKey}=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
-			]
-		]
-	});
-};
+import { onErrorResponse } from '$lib/response';
 
 export const GET: RequestHandler = async ({ url, cookies }) => {
 	// requests refresh and access tokens
@@ -25,8 +11,9 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	const state = url.searchParams.get('state');
 	const storedState = cookies.get(spotifyAuthStateKey);
 
+	const errorUrl = `${url.origin}/error`; // TODO: implement error page
 	if (code === null || state === null || state !== storedState) {
-		return onErrorResponse(url.origin);
+		return onErrorResponse(errorUrl);
 	}
 
 	try {
@@ -49,6 +36,6 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 			]
 		});
 	} catch (error) {
-		return onErrorResponse(url.origin);
+		return onErrorResponse(errorUrl);
 	}
 };
