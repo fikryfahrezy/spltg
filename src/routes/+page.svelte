@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
 	import type { CurrentlyPlayingTrack } from '$lib/spotifyapi.type';
 	import SpotifySDK from '$lib/SpotifySDK.svelte';
 
@@ -9,35 +10,35 @@
 
 	let spotifyPlayer: SpotifySDK;
 
-	let currentlyPlayingTrack = $state<CurrentlyPlayingTrack>();
+	let currentlyPlayingTrack = $state<CurrentlyPlayingTrack | null>(null);
 	let progress = $state<number>(0);
 	let progressIntervalId = $state<number>();
 
-	function getCurrentlyPlaying() {
+	async function getCurrentlyPlaying() {
 		if (!spotifyPlayer) {
 			return;
 		}
 
-		spotifyPlayer
-			.getCurrentlyPlayingTrack()
-			.then((res) => {
-				currentlyPlayingTrack = res;
-				progress = res.progress_ms ?? 0;
-			})
-			.then(() => {
-				progressIntervalId = window.setInterval(() => {
-					progress += minuteInMS;
+		const _currentlyPlayingTrack = await spotifyPlayer.getCurrentlyPlayingTrack();
+		currentlyPlayingTrack = _currentlyPlayingTrack;
+		progress = _currentlyPlayingTrack.progress_ms ?? 0;
 
-					const durationMs = currentlyPlayingTrack?.item?.duration_ms;
-					if (durationMs !== undefined && progress > durationMs) {
-						clearInterval(progressIntervalId);
-						getCurrentlyPlaying();
-					}
-				}, minuteInMS);
-			});
+		if (!_currentlyPlayingTrack.is_playing) {
+			return;
+		}
+
+		progressIntervalId = window.setInterval(() => {
+			progress += minuteInMS;
+
+			const durationMs = currentlyPlayingTrack?.item?.duration_ms;
+			if (durationMs !== undefined && progress > durationMs) {
+				clearInterval(progressIntervalId);
+				getCurrentlyPlaying();
+			}
+		}, minuteInMS);
 	}
 
-	$effect(() => {
+	onMount(() => {
 		setTimeout(() => {
 			getCurrentlyPlaying();
 		}, minuteInMS);
