@@ -6,38 +6,11 @@
 		WebPlaybackState
 	} from './spotifysdk.type';
 
+	import { onMount } from 'svelte';
+
 	import type { CurrentlyPlayingTrack } from './spotifyapi.type';
 
 	const spotifyAPIURL = 'https://api.spotify.com/v1';
-
-	const defaultPlayer: SpotifyPlayer = {
-		removeListener() {
-			return false;
-		},
-		async getCurrentState() {
-			return null;
-		},
-		async setName() {},
-		async getVolume() {
-			return 0;
-		},
-		async setVolume() {},
-		async pause() {},
-		async resume() {},
-		async togglePlay() {},
-		async seek() {},
-		async previousTrack() {},
-		async nextTrack() {},
-		async activateElement() {},
-		disconnect() {},
-		async connect() {
-			return false;
-		},
-		addListener() {
-			return false;
-		},
-		on() {}
-	};
 
 	let {
 		getOAuthToken,
@@ -54,10 +27,10 @@
 		onReady
 	} = $props<SpotifyPlayerProps>();
 
-	let token = $state<string>('');
-	let player = $state<SpotifyPlayer>(defaultPlayer);
+	let token: string;
+	let player: SpotifyPlayer;
 
-	$effect(function () {
+	onMount(function () {
 		const script = document.createElement('script');
 		script.src = 'https://sdk.scdn.co/spotify-player.js';
 		script.async = true;
